@@ -5,7 +5,7 @@ Snap2Cash is a hackathon project that lets users quickly generate product listin
 ## 🚀 Features
 
 - **Agentic AI Integration** by working in an orchestrated manner to gather all information: 
-    - Uses [Langflow](https://langflow.org/) to extract titles, descriptions, and categories from uploaded images. An orchestrator agent calls the relevant agents/tools specialised to different tasks (e.g., after the research agent, the pricing agent gets called by the orchestrator agent and it uses the previous information).
+    - Leverages 2 [Langflow](https://langflow.org/) flows to automatically extract titles, descriptions, and categories from uploaded images. An orchestrator agent calls the relevant agents/tools specialised to different tasks (e.g., after the research agent, the pricing agent gets called by the orchestrator agent and it uses the previous information).
     - **ElevenLabs**: A key feature is that after uploading the image, a voice agent further asks relevant and concise questions relating to the image used in the following workflow.
 - **Instant Listings**: Auto-populates and posts listings to a mock marketplace hosted on Vercel (eBay Developer Program takes several days for verification).
 
@@ -17,6 +17,7 @@ Snap2Cash is a hackathon project that lets users quickly generate product listin
 4. Listing appears instantly in the marketplace interface.
 
 Note: In the future, the listing can be uploaded to many different marketplaces such as eBay (using its API interface)! The marketplace interface can be found [here](https://my-listing-app-tawny.vercel.app/)! 
+
 
 ## 🙌 Authors
 
