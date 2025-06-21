@@ -1,6 +1,6 @@
-# 🛍️ Snap2Cash
+# 🛍️ snap2cash
 
-Snap2Cash is a hackathon project that lets users quickly generate product listings using images and AI. Upload a photo and our Langflow-powered workflow handles the rest — extracting details and posting a listing to the marketplace automatically while getting the most relevant details about the item!
+snap2cash is a hackathon project that lets users quickly generate product listings using images and AI. Upload a photo and our Langflow-powered workflow handles the rest — extracting details and posting a listing to the marketplace automatically while getting the most relevant details about the item!
 
 <p align="center">
   <img src="./assets/image.png" alt="App Screenshot" width="500"/>
