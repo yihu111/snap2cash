@@ -2,6 +2,10 @@
 
 Snap2Cash is a hackathon project that lets users quickly generate product listings using images and AI. Upload a photo and our Langflow-powered workflow handles the rest — extracting details and posting a listing to the marketplace automatically while getting the most relevant details about the item!
 
+<p align="center">
+  <img src="./assets/image.png" alt="App Screenshot" width="500"/>
+</p>
+
 ## 🚀 Features
 
 - **Agentic AI Integration** by working in an orchestrated manner to gather all information: 
@@ -17,7 +21,6 @@ Snap2Cash is a hackathon project that lets users quickly generate product listin
 4. Listing appears instantly in the marketplace interface.
 
 Note: In the future, the listing can be uploaded to many different marketplaces such as eBay (using its API interface)! The marketplace interface can be found [here](https://my-listing-app-tawny.vercel.app/)! 
-
 
 ## 🙌 Authors
 
