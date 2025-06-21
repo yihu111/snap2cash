@@ -98,3 +98,22 @@ async def process_image(file: UploadFile = File(...)):
         # Not JSON? return as plain-text message
         return {"message": msg}
 
+
+XI_API_KEY = "sk_99a5880a73b698beba241c538aba048dd3758aa3d8f415e7"
+
+@app.get("/api/getTranscript/{conversation_id}")
+def get_transcript(conversation_id: str):
+    url = f"https://api.elevenlabs.io/v1/convai/conversations/{conversation_id}"
+    headers = {"xi-api-key": XI_API_KEY}
+    resp = requests.get(url, headers=headers, timeout=30)
+    if not resp.ok:
+        raise HTTPException(resp.status_code, detail=resp.text)
+
+    data = resp.json()
+    msgs = data.get("messages", [])
+    # You’ll only see entries here once the convo is fully closed (endSession called)
+    transcript = "\n".join(f"{m['who'].upper()}: {m['text']}" for m in msgs)
+    return {
+        "conversation_id": conversation_id,
+        "transcript": transcript or "<no messages — make sure endSession() has run>"
+    }
