@@ -1,25 +1,91 @@
+// components/ListingReview.tsx
+
 import React from 'react';
 import { Circle } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  'https://gvpahnopmpwuifupezyr.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFobm9wbXB3dWlmdXBlenlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDQ0NTAxMCwiZXhwIjoyMDY2MDIxMDEwfQ.uJQB9Qbxz1ZQfxC_TA0jmd6B4fk8eHz9y-P8jMn1F_s'
+);
 
 interface ListingReviewProps {
   listing: {
     title:       string;
     description: string;
-    price:       string | number;  // allow number or string
+    price:       string | number;
     category:    string;
   };
-  onAccept: () => void;
+  imageFile: File;
+  onAccept:  () => void;
   onReject:  () => void;
 }
 
-const ListingReview: React.FC<ListingReviewProps> = ({ listing, onAccept, onReject }) => {
+const ListingReview: React.FC<ListingReviewProps> = ({
+  listing,
+  imageFile,
+  onAccept,
+  onReject,
+}) => {
   // format price as GBP currency
   const formattedPrice = new Intl.NumberFormat('en-GB', {
     style:    'currency',
     currency: 'GBP',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price);
+  }).format(
+    typeof listing.price === 'string'
+      ? parseFloat(listing.price)
+      : listing.price
+  );
+
+  const handleAccept = async () => {
+    if (!imageFile) {
+      alert('Image file missing');
+      return;
+    }
+    // 1) upload image to Supabase Storage
+    const fileName = `listings/${Date.now()}_${imageFile.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('listing-images')
+      .upload(fileName, imageFile, {
+        contentType: imageFile.type,
+        upsert: false,
+      });
+    if (uploadError) {
+      console.error('Image upload failed:', uploadError);
+      alert('Image upload failed');
+      return;
+    }
+
+    // 2) get public URL
+    const { data: urlData } = supabase.storage
+      .from('listing-images')
+      .getPublicUrl(fileName);
+
+    // 3) insert listing record
+    const { error: insertError } = await supabase
+      .from('listings')
+      .insert([
+        {
+          title:       listing.title,
+          description: listing.description,
+          price:       typeof listing.price === 'string'
+            ? parseFloat(listing.price)
+            : listing.price,
+          category:    listing.category,
+          image_url:   urlData.publicUrl,
+        },
+      ]);
+    if (insertError) {
+      console.error('Insert failed:', insertError);
+      alert('Listing insert failed');
+      return;
+    }
+
+    alert('✅ Listing uploaded!');
+    onAccept();
+  };
 
   return (
     <div className="w-full">
@@ -34,28 +100,36 @@ const ListingReview: React.FC<ListingReviewProps> = ({ listing, onAccept, onReje
       <div className="bg-stone-50 border border-stone-200 rounded-lg p-8 mb-8">
         <div className="space-y-6">
           <div>
-            <label className="text-sm text-stone-500 font-light block mb-2">Title</label>
+            <label className="text-sm text-stone-500 font-light block mb-2">
+              Title
+            </label>
             <p className="text-stone-800 font-light bg-white border border-stone-200 p-4 rounded">
               {listing.title}
             </p>
           </div>
-          
+
           <div>
-            <label className="text-sm text-stone-500 font-light block mb-2">Category</label>
+            <label className="text-sm text-stone-500 font-light block mb-2">
+              Category
+            </label>
             <p className="text-stone-600 bg-white border border-stone-200 p-4 rounded font-light">
               {listing.category}
             </p>
           </div>
-          
+
           <div>
-            <label className="text-sm text-stone-500 font-light block mb-2">Starting price</label>
+            <label className="text-sm text-stone-500 font-light block mb-2">
+              Starting price
+            </label>
             <p className="text-stone-800 text-xl font-light bg-white border border-stone-200 p-4 rounded">
               {formattedPrice}
             </p>
           </div>
 
           <div>
-            <label className="text-sm text-stone-500 font-light block mb-2">Description</label>
+            <label className="text-sm text-stone-500 font-light block mb-2">
+              Description
+            </label>
             <div className="bg-white border border-stone-200 p-4 rounded h-32 overflow-y-auto">
               <p className="text-stone-800 font-light whitespace-pre-wrap">
                 {listing.description}
@@ -74,7 +148,7 @@ const ListingReview: React.FC<ListingReviewProps> = ({ listing, onAccept, onReje
         </button>
 
         <button
-          onClick={onAccept}
+          onClick={handleAccept}
           className="flex-1 bg-stone-800 hover:bg-stone-900 text-stone-50 px-6 py-3 rounded-md font-light transition-colors"
         >
           Upload to eBay

@@ -10,21 +10,19 @@ type ProgressStatus = 'analyzing' | 'complete' | 'error';
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('upload');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile]   = useState<File | null>(null);
   const [progressStatus, setProgressStatus] = useState<ProgressStatus>('analyzing');
   const [generatedListing, setGeneratedListing] = useState<any>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
 
-  // Called by ImageUpload
+  // 1) Receive both the File and its preview URL
   const handleImageUpload = (file: File, imageUrl: string) => {
     setUploadedFile(file);
     setUploadedImage(imageUrl);
     setCurrentStep('progress');
     processImage(file);
   };
-  
 
-  // Call your FastAPI endpoint
+  // 2) Send to FastAPI
   const processImage = async (file: File) => {
     setProgressStatus('analyzing');
     const formData = new FormData();
@@ -34,10 +32,10 @@ const Index = () => {
       const resp = await fetch("http://localhost:8000/process-image", {
         method: "POST",
         body: formData,
-      });      
+      });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-      // assume { listing: { title, description, price, ... } }
+      // data.listing must exist
       setGeneratedListing(data.listing);
       setProgressStatus('complete');
       setCurrentStep('review');
@@ -52,13 +50,12 @@ const Index = () => {
   };
 
   const handleListingReject = () => {
-    setShowFeedback(true);
     setCurrentStep('feedback');
   };
 
   const handleFeedbackSubmit = (feedback: string) => {
     console.log('Feedback submitted:', feedback);
-    // optionally restart:
+    // restart if desired
     setCurrentStep('progress');
     setProgressStatus('analyzing');
     if (uploadedFile) processImage(uploadedFile);
@@ -95,11 +92,12 @@ const Index = () => {
             />
           )}
 
-          {currentStep === 'review' && (
+          {currentStep === 'review' && uploadedFile && generatedListing && (
             <ListingReview 
-              listing={generatedListing}
-              onAccept={handleListingAccept}
-              onReject={handleListingReject}
+              listing   ={generatedListing}
+              imageFile ={uploadedFile}
+              onAccept  ={handleListingAccept}
+              onReject  ={handleListingReject}
             />
           )}
 
