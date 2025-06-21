@@ -45,14 +45,18 @@ const Index = () => {
       setGeneratedListing(data.listing);
 
       // start ElevenLabs convo
-      setTranscript(''); // clear
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setTranscript(''); // clear previous
+      // open mic & start session
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const id = await convo.startSession({
         agentId: 'agent_01jy86vgvjf3matvmemzb7fgmz',
+        userAudioStream: micStream,
         dynamicVariables: {
           image_analysis_result: data.image_analysis_result
         }
       });
+      // save mic for cleanup later
+      (convo as any).micStream = micStream;
       setConversationId(id);
       setCurrentStep('chat');
       setProgressStatus('complete');
@@ -62,13 +66,35 @@ const Index = () => {
     }
   };
 
-  // once chat ends, automatically move to review
+  // Automatically fetch transcript and advance when the convo ends
   useEffect(() => {
-    if (currentStep === 'chat' && convo.status === 'disconnected') {
-      // you could POST transcript+ID here if you like
-      setCurrentStep('review');
+    if (currentStep === 'chat' && convo.status === 'disconnected' && conversationId) {
+      (async () => {
+        try {
+          // stop the mic so no more audio is sent
+          const mic = (convo as any).micStream as MediaStream;
+          mic?.getTracks().forEach(t => t.stop());
+
+          // fetch the saved transcript
+          const res = await fetch(`http://localhost:8000/api/getTranscript/${conversationId}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const body = await res.json();
+          console.log('Full transcript:', body.transcript);
+
+          // attach transcript to your listing payload
+          setGeneratedListing((prev: any) => ({
+            ...prev,
+            transcript: body.transcript
+          }));
+
+          // advance to review
+          setCurrentStep('review');
+        } catch (err) {
+          console.error('Error fetching transcript on disconnect:', err);
+        }
+      })();
     }
-  }, [convo.status, currentStep]);
+  }, [convo.status, conversationId, currentStep]);
 
   const handleListingAccept = () => {
     console.log('Listing accepted:', generatedListing);
@@ -105,7 +131,6 @@ const Index = () => {
         </div>
 
         <div className="max-w-2xl mx-auto">
-
           {currentStep === 'upload' && (
             <ImageUpload onImageUpload={handleImageUpload} />
           )}
@@ -117,7 +142,6 @@ const Index = () => {
             />
           )}
 
-          {/* Chat step */}
           {currentStep === 'chat' && (
             <div className="mb-6">
               <p>Status: {convo.status}</p>
@@ -126,20 +150,7 @@ const Index = () => {
               </pre>
               <audio src={convo.audioStreamUrl} autoPlay hidden />
               <button
-                onClick={async () => {
-                  // 1) close the session
-                  await convo.endSession();
-                  // 2) wait for socket to fully disconnect
-                  while (convo.status !== 'disconnected') {
-                    await new Promise(r => setTimeout(r, 100));
-                  }
-                  // 3) fetch the saved transcript from your FastAPI backend
-                  const res = await fetch(`http://localhost:8000/api/getTranscript/${conversationId}`);
-                  const body = await res.json();
-                  console.log('Full transcript:', body.transcript);
-                  // 4) advance to review
-                  setCurrentStep('review');
-                }}
+                onClick={() => convo.endSession()}
                 disabled={convo.status !== 'connected'}
                 className="mt-2 px-3 py-1 bg-red-500 text-white rounded"
               >
@@ -150,17 +161,15 @@ const Index = () => {
 
           {currentStep === 'review' && uploadedFile && generatedListing && (
             <ListingReview 
-              listing   ={generatedListing}
-              imageFile ={uploadedFile}
-              onAccept  ={handleListingAccept}
-              onReject  ={handleListingReject}
+              listing={generatedListing}
+              imageFile={uploadedFile}
+              onAccept={handleListingAccept}
+              onReject={handleListingReject}
             />
           )}
 
           {currentStep === 'feedback' && (
-            <FeedbackComponent 
-              onSubmit={handleFeedbackSubmit}
-            />
+            <FeedbackComponent onSubmit={handleFeedbackSubmit} />
           )}
         </div>
       </div>
