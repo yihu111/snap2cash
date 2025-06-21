@@ -1,19 +1,26 @@
-
 import React from 'react';
 import { Circle } from 'lucide-react';
 
 interface ListingReviewProps {
   listing: {
-    title: string;
+    title:       string;
     description: string;
-    price: string;
-    category: string;
+    price:       string | number;  // allow number or string
+    category:    string;
   };
   onAccept: () => void;
-  onReject: () => void;
+  onReject:  () => void;
 }
 
 const ListingReview: React.FC<ListingReviewProps> = ({ listing, onAccept, onReject }) => {
+  // format price as GBP currency
+  const formattedPrice = new Intl.NumberFormat('en-GB', {
+    style:    'currency',
+    currency: 'GBP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price);
+
   return (
     <div className="w-full">
       <div className="text-center mb-12">
@@ -43,7 +50,7 @@ const ListingReview: React.FC<ListingReviewProps> = ({ listing, onAccept, onReje
           <div>
             <label className="text-sm text-stone-500 font-light block mb-2">Starting price</label>
             <p className="text-stone-800 text-xl font-light bg-white border border-stone-200 p-4 rounded">
-              {listing.price}
+              {formattedPrice}
             </p>
           </div>
 

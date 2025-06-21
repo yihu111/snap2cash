@@ -1,9 +1,8 @@
-
 import React, { useCallback, useState } from 'react';
 import { Upload } from 'lucide-react';
 
 interface ImageUploadProps {
-  onImageUpload: (imageUrl: string) => void;
+  onImageUpload: (file: File, imageUrl: string) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
@@ -24,25 +23,24 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
   }, []);
 
   const handleFile = (file: File) => {
-    if (file.type.startsWith('image/')) {
-      setUploading(true);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        setTimeout(() => {
-          setUploading(false);
-          onImageUpload(imageUrl);
-        }, 1500);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file.type.startsWith('image/')) return;
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      // give a little delay if you like
+      setTimeout(() => {
+        setUploading(false);
+        onImageUpload(file, imageUrl);
+      }, 500);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

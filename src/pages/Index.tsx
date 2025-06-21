@@ -1,55 +1,54 @@
-
 import React, { useState } from 'react';
 import ImageUpload from '../components/ImageUpload';
-import VoiceQuestions from '../components/VoiceQuestions';
 import ProgressTracker from '../components/ProgressTracker';
 import ListingReview from '../components/ListingReview';
 import FeedbackComponent from '../components/FeedbackComponent';
 
-type FlowStep = 'upload' | 'questions' | 'progress' | 'review' | 'feedback';
-
-type ProgressStatus = 'analyzing' | 'searching' | 'pricing' | 'generating' | 'complete' | 'error';
+type FlowStep = 'upload' | 'progress' | 'review' | 'feedback';
+type ProgressStatus = 'analyzing' | 'complete' | 'error';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('upload');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [voiceAnswers, setVoiceAnswers] = useState<Record<string, string>>({});
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [progressStatus, setProgressStatus] = useState<ProgressStatus>('analyzing');
   const [generatedListing, setGeneratedListing] = useState<any>(null);
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const handleImageUpload = (imageUrl: string) => {
+  // Called by ImageUpload
+  const handleImageUpload = (file: File, imageUrl: string) => {
+    setUploadedFile(file);
     setUploadedImage(imageUrl);
-    setCurrentStep('questions');
-  };
-
-  const handleQuestionsComplete = (answers: Record<string, string>) => {
-    setVoiceAnswers(answers);
     setCurrentStep('progress');
-    simulateAgenticWorkflow();
+    processImage(file);
   };
+  
 
-  const simulateAgenticWorkflow = async () => {
-    const steps: ProgressStatus[] = ['analyzing', 'searching', 'pricing', 'generating'];
-    
-    for (let i = 0; i < steps.length; i++) {
-      setProgressStatus(steps[i]);
-      await new Promise(resolve => setTimeout(resolve, 3000));
+  // Call your FastAPI endpoint
+  const processImage = async (file: File) => {
+    setProgressStatus('analyzing');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch("http://localhost:8000/process-image", {
+        method: "POST",
+        body: formData,
+      });      
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      // assume { listing: { title, description, price, ... } }
+      setGeneratedListing(data.listing);
+      setProgressStatus('complete');
+      setCurrentStep('review');
+    } catch (err) {
+      console.error(err);
+      setProgressStatus('error');
     }
-    
-    setGeneratedListing({
-      title: "Vintage Camera - Excellent Condition",
-      description: "High-quality vintage camera in excellent working condition...",
-      price: "$299.99",
-      category: "Electronics"
-    });
-    
-    setProgressStatus('complete');
-    setCurrentStep('review');
   };
 
   const handleListingAccept = () => {
-    console.log('Listing accepted - uploading to eBay...');
+    console.log('Listing accepted:', generatedListing);
   };
 
   const handleListingReject = () => {
@@ -59,14 +58,16 @@ const Index = () => {
 
   const handleFeedbackSubmit = (feedback: string) => {
     console.log('Feedback submitted:', feedback);
+    // optionally restart:
     setCurrentStep('progress');
     setProgressStatus('analyzing');
-    simulateAgenticWorkflow();
+    if (uploadedFile) processImage(uploadedFile);
   };
 
   const handleReupload = () => {
     setCurrentStep('upload');
     setUploadedImage(null);
+    setUploadedFile(null);
     setProgressStatus('analyzing');
   };
 
@@ -85,13 +86,6 @@ const Index = () => {
         <div className="max-w-2xl mx-auto">
           {currentStep === 'upload' && (
             <ImageUpload onImageUpload={handleImageUpload} />
-          )}
-
-          {currentStep === 'questions' && (
-            <VoiceQuestions 
-              uploadedImage={uploadedImage}
-              onComplete={handleQuestionsComplete}
-            />
           )}
 
           {currentStep === 'progress' && (
