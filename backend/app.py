@@ -16,7 +16,7 @@ UPLOAD_URL_IMAGE = f"{LANGFLOW_BASE}/api/v1/files/upload/{IMAGE_FLOW_ID}"
 RUN_URL_IMAGE    = f"{LANGFLOW_BASE}/api/v1/run/{IMAGE_FLOW_ID}"
 RUN_URL_PRICE    = f"{LANGFLOW_BASE}/api/v1/run/{PRICE_FLOW_ID}"
 
-XI_API_KEY       = os.getenv("XI_API_KEY", "sk_99a5880a73b698beba241c538aba048dd3758aa3d8f415e7")  # your ElevenLabs key
+XI_API_KEY       = os.getenv("XI_API_KEY")  # ElevenLabs key
 # ────────────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(title="Langflow Image & Price Demo")
