@@ -1,12 +1,10 @@
-// components/ListingReview.tsx
-
 import React from 'react';
 import { Circle } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  'https://gvpahnopmpwuifupezyr.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cGFobm9wbXB3dWlmdXBlenlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDQ0NTAxMCwiZXhwIjoyMDY2MDIxMDEwfQ.uJQB9Qbxz1ZQfxC_TA0jmd6B4fk8eHz9y-P8jMn1F_s'
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_KEY
 );
 
 interface ListingReviewProps {
