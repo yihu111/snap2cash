@@ -14,7 +14,7 @@ snap2cash is a hackathon project that lets users quickly generate product listin
 3. The user's answers, along with the extracted image/item information, are passed into a hierarchical multi-agent system. Led by an Orchestrator Agent, with sub-agents such as a Research Agent with Tavily and AgentQL, a Pricing Agent, and a Listing Gen Agent, an informed listing is created.
 4. After human-in-the-loop feedback, the listing is sent to whatever marketplace is integrated.
 
-Note: In the future, the listing can be uploaded to many different marketplaces such as eBay (using its API interface)! The marketplace interface can be found [here](https://my-listing-app-tawny.vercel.app/)! 
+Note: In the future, the listing can be uploaded to many different marketplaces such as eBay (using its API interface)! 
 
 ## 🙌 Authors
 
